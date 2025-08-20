@@ -17,11 +17,51 @@
         </form>
 
         <h2>Saved Notes</h2>
-        <ul id="noteslist"></ul>
+        <ul id="notesList"></ul>
     </div>
 
     <script>
+        async function LoadNotes() {
+            const res = await fetch("/notes");
+            const notes = await res.json();
+            const notesList = document.getElementById("notesList");
+            notesList.innerHTML = "";
+
+            notes.foreach(note => {
+                const li = document.createElement("li");
+                li.innerHTML = `
+                    <div class="note">
+                        <h3>${note.title}</h3>
+                        <p>${note.content}</p>
+                        <button class="btn delete" onclick="deleteNote('${encodeURIComponent(note.title)}')" >Delete</button>
+                    </div>
+                `;
+                notesList.appendchild(li);
+            });
+        }
+
+        document.getElementById("noteform").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const title = document.getElementById("title").value;
+            const content = document.getElementById("content").value;
+
+            await fetch("/notes", {
+                method : "POST",
+                headers : {"Content-Type" : "application/json"},
+                body: JSON.stringify({ title, content}) 
+            });
+            
+            document.getElementById("noteform").reset();
+            LoadNotes();
+        });
+
+        async function deleteNote(title) {
+            await fetch(`/notes/${title}`, {method : "DELETE"});
+            LoadNotes();
+        }
         
+        //Load notes when page opens
+        LoadNotes();
     </script>
 
 
